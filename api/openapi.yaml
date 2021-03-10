@@ -1,0 +1,65 @@
+openapi: 3.0.1
+info:
+  title: Issuing Center API
+  version: 1.0.0
+paths:
+  /issuing/cert:
+    post:
+      summary: Issues certificate
+      description: 'Must be present either config or csr but not both or none.
+        If config passed instead of csr then creates private key and signs with it created csr.
+        Then private key also will be returned.'
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/CertForm'
+      responses:
+        '200':
+          description: 'Archive containing root cert, generated cert, csr, pub key, private key and conf if had.'
+          content:
+            application/x-tar:
+              schema:
+                type: string
+                format: binary
+            application/zip:
+              schema:
+                type: string
+                format: binary
+        '400':
+          description: Invalid. Also returned if csr and config were both present or none of them was present.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '406':
+          description: Only x-tar or zip are acceptable.
+
+components:
+  schemas:
+    CertForm:
+      type: object
+      required:
+        - days
+      properties:
+        days:
+          description: Certificate expiration. Required
+          type: integer
+          format: int64
+          minimum: 1
+        config:
+          description: OpenSSL configuration file
+          type: string
+          format: binary
+        csr:
+          description: Certificate Signed Request file
+          type: string
+          format: binary
+    Error:
+      type: object
+      properties:
+        errors:
+          type: string
+          description: describes error info
+
